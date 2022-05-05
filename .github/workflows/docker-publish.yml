@@ -48,5 +48,22 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-train:${{ steps.vars.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Create a docker volume
+        id: docker_volume
+        run: docker volume create dataset
+
+      - name: Run an image for data
+        id: docker_run_data
+        run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data:400d285
+
+      - name: Run an image for train
+        id: docker_run_train
+        run: docker run -d --rm --name train_1 -v dataset:/data tzephons/github-action-train:${{ steps.vars.outputs.sha_short }}
+
+      - name: Run an image for api
+        id: docker_run_api
+        run: docker run -d --rm --name api_1 -v dataset:/data tzephons/github-action-api:eeebfa6
