@@ -66,4 +66,4 @@ jobs:
 
       - name: Run an image for api
         id: docker_run_api
-        run: docker run -d --rm --name api_1 -v dataset:/data tzephons/github-action-api:eeebfa6
+        run: docker run --rm --name api_1 -v dataset:/data tzephons/github-action-api:eeebfa6
