@@ -30,6 +30,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
+      - name: Create a docker volume
+        id: docker_volume
+        run: docker volume create dataset
+
+      - name: Run an image for data
+        id: docker_run_data
+        run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data
+
+      - name: Build an image for train
+        id: docker_run_train
+        run: docker build -t data -f Dockerfile_data .
+
+      - name: Run an image for train
+        id: docker_run_train
+        run: docker run -d --rm --name train_1 -v data
+
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
@@ -37,33 +53,29 @@ jobs:
       - name: Check outputs
         run: echo ${{ steps.vars.outputs.sha_short }}
 
-      - name: Build and push
-        id: docker_build
+      - name: Build and push train
+        id: docker_build_train
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile
+          file: ./Dockerfile_train
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-train:${{ steps.vars.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: Build and push model
+        id: docker_build_model
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile_model
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-model
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-
-      - name: Create a docker volume
-        id: docker_volume
-        run: docker volume create dataset
-
-      - name: Run an image for data
-        id: docker_run_data
-        run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data:400d285
-
-      - name: Run an image for train
-        id: docker_run_train
-        run: docker run -d --rm --name train_1 -v dataset:/data tzephons/github-action-train:${{ steps.vars.outputs.sha_short }}
-
-      - name: Run an image for api
-        id: docker_run_api
-        run: docker run --rm --name api_1 -v dataset:/data tzephons/github-action-api:eeebfa6
