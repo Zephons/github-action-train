@@ -5,7 +5,7 @@ on:
     # tags:
     #   - "v*.*.*"
 jobs:
-  build:
+  build-train:
     runs-on: ubuntu-latest
     steps:
 
@@ -39,7 +39,7 @@ jobs:
         run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data
 
       - name: Build and push train
-        id: docker_hub_build_train
+        id: docker_build_train
         uses: docker/build-push-action@v2
         with:
           context: ./
@@ -50,8 +50,15 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+  build-model:
+    needs: build-train
+    runs-on: ubuntu-latest
+    steps:
       - name: Run an image for train
-        id: docker_local_run_train
+        id: docker_run_train
         run: docker run -d --rm --name train_1 -v dataset:/data tzephons/github-action-train
 
       # - name: Set outputs
@@ -62,7 +69,7 @@ jobs:
       #   run: echo ${{ steps.vars.outputs.sha_short }}
 
       - name: Build and push model
-        id: docker_hub_build_model
+        id: docker_build_model
         uses: docker/build-push-action@v2
         with:
           context: ./
