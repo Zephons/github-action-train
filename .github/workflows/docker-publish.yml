@@ -64,6 +64,9 @@ jobs:
       # - name: Check outputs
       #   run: echo ${{ steps.vars.outputs.sha_short }}
 
+      - name: Copy model.json from train container
+        run: docker cp train_1/data/model.json:/data
+
       - name: Build and push model
         id: docker_build_model
         uses: docker/build-push-action@v2
