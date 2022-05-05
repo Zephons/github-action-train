@@ -40,11 +40,11 @@ jobs:
 
       - name: Build an image for train
         id: docker_local_build_train
-        run: docker build -t data -f Dockerfile_train .
+        run: docker build -t train -f Dockerfile_train .
 
       - name: Run an image for train
         id: docker_local_run_train
-        run: docker run -d --rm --name train_1 -v data
+        run: docker run -d --rm --name train_1 -v dataset:/data train
 
       - name: Set outputs
         id: vars
