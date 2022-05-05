@@ -39,11 +39,11 @@ jobs:
         run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data
 
       - name: Build an image for train
-        id: docker_build_train
+        id: docker_local_build_train
         run: docker build -t data -f Dockerfile_data .
 
       - name: Run an image for train
-        id: docker_run_train
+        id: docker_local_run_train
         run: docker run -d --rm --name train_1 -v data
 
       - name: Set outputs
@@ -54,7 +54,7 @@ jobs:
         run: echo ${{ steps.vars.outputs.sha_short }}
 
       - name: Build and push train
-        id: docker_build_train
+        id: docker_hub_build_train
         uses: docker/build-push-action@v2
         with:
           context: ./
@@ -66,7 +66,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Build and push model
-        id: docker_build_model
+        id: docker_hub_build_model
         uses: docker/build-push-action@v2
         with:
           context: ./
