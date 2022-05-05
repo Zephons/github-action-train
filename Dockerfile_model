@@ -1,4 +1,4 @@
 FROM alpine
 LABEL maintainer="Hetic"
 
-COPY /data/model.json /data/
+COPY /data/ /data/
