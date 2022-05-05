@@ -36,7 +36,7 @@ jobs:
 
       - name: Run an image for data
         id: docker_run_data
-        run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data
+        run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data:400d285
 
       - name: Build an image for train
         id: docker_local_build_train
