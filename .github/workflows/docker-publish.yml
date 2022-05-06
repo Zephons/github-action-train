@@ -2,8 +2,6 @@ name: CI to Docker Hub
 on:
   push:
     branches: [ main ]
-    # tags:
-    #   - "v*.*.*"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,62 +20,24 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
-      - name: Create a docker volume
-        id: docker_volume
-        run: docker volume create dataset
+      - name: Check outputs
+        run: echo ${{ steps.vars.outputs.sha_short }}
 
-      - name: Run an image for data
-        id: docker_run_data
-        run: docker run -d --rm --name data_1 -v dataset:/data tzephons/github-action-data
-
-      - name: Build and push train
-        id: docker_build_train
+      - name: Build and push
+        id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile_train
+          file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-train
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-
-      - name: Run an image for train
-        id: docker_run_train
-        run: docker run --name train_1 -v dataset:/data tzephons/github-action-train
-
-      # - name: Set outputs
-      #   id: vars
-      #   run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-
-      # - name: Check outputs
-      #   run: echo ${{ steps.vars.outputs.sha_short }}
-
-      - name: Copy model.json from train container
-        run: docker cp train_1:data/model.json ./data
-
-      - name: Build and push model
-        id: docker_build_model
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile_model
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-model
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-train:${{ steps.vars.outputs.sha_short }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/github-action-train
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
